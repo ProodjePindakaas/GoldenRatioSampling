@@ -4,7 +4,9 @@ from sympy.solvers import nsolve
 from sympy import Symbol
 
 
-def golden_vec(n_dim, p=1):
+# GOLDEN RATIO SAMPLING FUNCTIONS
+
+def golden_vec(n_dim: int, *, p: int = 1):
     assert isinstance(n_dim, int) and n_dim > 0
     assert isinstance(p, int) and p > 0
     vec = np.zeros(n_dim)
@@ -15,87 +17,44 @@ def golden_vec(n_dim, p=1):
     return vec
 
 
-def golden_sample(n_sample, n_dim, p=1):
-    vec = golden_vec(n_dim, p)
+def golden_sample(n_sample: int, n_dim: int, *, p: int = 1):
+    vec = golden_vec(n_dim, p=p)
     return np.array([n * vec % 1 for n in range(n_sample)])
 
+
+def golden_sphere_sampling(n_sample: int, n_dim: int, *, p: int = 1, cartesian: bool = True):
+    point_coordinates = golden_sample(n_sample, n_dim, p=p).T
+    angles = np.arccos(2 * point_coordinates[:-1] - 1)
+    last_angle = 2 * np.pi * point_coordinates[-1]
+    spherical_coordinates = np.array([np.ones(n_sample), *angles, last_angle])
+    points = spherical_coordinates.T
+    if cartesian:
+        points = [spherical_to_cartesian(p) for p in points]
+    return np.array(points)
+
+
+def golden_ball_sampling(n_sample: int, n_dim: int, *, p: int = 1, cartesian: bool = True):
+    points = golden_sphere_sampling(n_sample, n_dim - 1, p=p, cartesian=False)
+    r = np.linspace(0, 1, n_sample)
+    r = np.power(r, 1 / n_dim)
+    points[:, 0] *= r
+    if cartesian:
+        points = [spherical_to_cartesian(p) for p in points]
+    return np.array(points)
+
+
+# CARTESIAN FUNCTIONS
 
 def cartesian_product(*arrays):
     meshgrid = np.meshgrid(*arrays, indexing='ij')
     return np.dstack(meshgrid).reshape(-1, len(arrays))
 
 
-def cartesian_sample(n_sample, n_dim, endpoint=False):
+def cartesian_sample(n_sample: int, n_dim: int, *, endpoint: bool = False):
     n_side = np.floor(np.power(n_sample, 1 / n_dim)).astype(int)
     array = np.linspace(0, 1, n_side, endpoint=endpoint)
     arrays = [array] * n_dim
     return cartesian_product(*arrays)
-
-
-def plot_golden_sample(n_sample, p=1):
-    x, y = golden_sample(n_sample, 2, p).T
-    colors = np.linspace(0, 1, n_sample)
-
-    plt.scatter(x, y, c=colors)
-    plt.xlim(0, 1)
-    plt.ylim(0, 1)
-    plt.show()
-
-
-def pi_sample_cumulative(points):
-    n_points = points.shape[0]
-    radii = np.sqrt((points*points).sum(axis=1))
-    inside = (radii < 1).astype(float)
-    hits = np.cumsum(inside)
-    totals = np.arange(1.0, n_points + 1.0)
-    ratios = hits / totals
-    estimates = ratios * 4.0
-    return estimates
-
-
-def pi_sample(points):
-    n_points = points.shape[0]
-    radii = np.sqrt((points*points).sum(axis=1))
-    inside = (radii < 1).astype(float)
-    hits = np.sum(inside)
-    ratio = hits / n_points
-    estimate = ratio * 4.0
-    return estimate
-
-
-def pi_golden_sample(max_sample):
-    points = golden_sample(max_sample, 2)
-    estimates = pi_sample_cumulative(points)
-    return estimates
-
-
-def pi_random_sample(max_sample):
-    points = np.random.rand(max_sample, 2)
-    estimates = pi_sample_cumulative(points)
-    return estimates
-
-
-def pi_cartesian_sample(max_sample):
-    n_points = np.zeros(max_sample)
-    estimates = np.zeros(max_sample)
-    for n in range(max_sample):
-        points = cartesian_sample(n + 1, 2)
-        n_points[n] = points.shape[0]
-        estimates[n] = pi_sample(points)
-    return n_points, estimates
-
-
-def plot_pi_sampling(n):
-    golden = pi_golden_sample(n)
-    random = pi_random_sample(n)
-    n_points, cartesian = pi_cartesian_sample(n)
-    plt.plot(golden, label='golden sample')
-    plt.plot(random, label='random sample')
-    plt.plot(n_points, cartesian, label='cartesian sample')
-    plt.xscale('log')
-    plt.axhline(np.pi)
-    plt.legend()
-    plt.show()
 
 
 def cartesian_to_spherical(x):
@@ -128,73 +87,120 @@ def spherical_to_cartesian(x):
     return y
 
 
-def golden_sphere_sampling(n_sample, n_dim, p=1, cartesian=True):
-    point_coordinates = golden_sample(n_sample, n_dim, p).T
-    angles = np.arccos(2 * point_coordinates[:-1] - 1)
-    last_angle = 2 * np.pi * point_coordinates[-1]
-    spherical_coordinates = np.array([np.ones(n_sample), *angles, last_angle])
-    points = spherical_coordinates.T
-    if cartesian:
-        points = [spherical_to_cartesian(p) for p in points]
-    return np.array(points)
 
 
-def golden_ball_sampling(n_sample, n_dim, p=1, cartesian=True):
-    points = golden_sphere_sampling(n_sample, n_dim - 1, p, cartesian=False)
-    r = np.linspace(0, 1, n_sample)
-    r = np.power(r, 1 / n_dim)
-    points[:, 0] *= r
-    if cartesian:
-        points = [spherical_to_cartesian(p) for p in points]
-    return np.array(points)
+
+# PI SAMPLING FUNCTIONS
+
+def pi_sample_cumulative(points):
+    n_points = points.shape[0]
+    radii = np.sqrt((points*points).sum(axis=1))
+    inside = (radii < 1).astype(float)
+    hits = np.cumsum(inside)
+    totals = np.arange(1.0, n_points + 1.0)
+    ratios = hits / totals
+    estimates = ratios * 4.0
+    return estimates
 
 
-# 2d ball sampling
+def pi_sample(points):
+    n_points = points.shape[0]
+    radii = np.sqrt((points*points).sum(axis=1))
+    inside = (radii < 1).astype(float)
+    hits = np.sum(inside)
+    ratio = hits / n_points
+    estimate = ratio * 4.0
+    return estimate
 
 
-n_sample = 100
-fig, ax = plt.subplots(2, 2)
-
-x, y = golden_ball_sampling(n_sample, 2).T
-colors = np.linspace(0, 1, n_sample)
-ax[0, 0].scatter(x, y, c=colors)
-ax[0, 0].set_xlim([-1, 1])
-ax[0, 0].set_ylim([-1, 1])
-
-x, y = golden_ball_sampling(n_sample, 2, 2).T
-colors = np.linspace(0, 1, n_sample)
-ax[0, 1].scatter(x, y, c=colors)
-ax[0, 1].set_xlim([-1, 1])
-ax[0, 1].set_ylim([-1, 1])
-
-x, y = golden_ball_sampling(n_sample, 2, 3).T
-colors = np.linspace(0, 1, n_sample)
-ax[1, 0].scatter(x, y, c=colors)
-ax[1, 0].set_xlim([-1, 1])
-ax[1, 0].set_ylim([-1, 1])
-
-x, y = golden_ball_sampling(n_sample, 2, 4).T
-colors = np.linspace(0, 1, n_sample)
-ax[1, 1].scatter(x, y, c=colors)
-ax[1, 1].set_xlim([-1, 1])
-ax[1, 1].set_ylim([-1, 1])
-
-plt.show()
+def pi_golden_sample(max_sample: int):
+    points = golden_sample(max_sample, 2)
+    estimates = pi_sample_cumulative(points)
+    return estimates
 
 
-# 3d  ball sampling
-n_sample = 1000
+def pi_random_sample(max_sample: int):
+    points = np.random.rand(max_sample, 2)
+    estimates = pi_sample_cumulative(points)
+    return estimates
 
-x, y, z = golden_sphere_sampling(n_sample, 2).T
-colors = np.linspace(0, 1, n_sample)
 
-fig = plt.figure()
-ax = fig.add_subplot(projection='3d')
+def pi_cartesian_sample(max_sample: int):
+    n_points = np.zeros(max_sample)
+    estimates = np.zeros(max_sample)
+    for n in range(max_sample):
+        points = cartesian_sample(n + 1, 2)
+        n_points[n] = points.shape[0]
+        estimates[n] = pi_sample(points)
+    return n_points, estimates
 
-ax.scatter(x, y, z, c=colors)
 
-ax.set_xlim([-1, 1])
-ax.set_ylim([-1, 1])
-ax.set_zlim([-1, 1])
+# PLOTTING FUNCTIONS
 
-plt.show()
+def plot_golden_sample(n_sample: int, *, p: int = 1):
+    x, y = golden_sample(n_sample, 2, p=p).T
+    colors = np.linspace(0, 1, n_sample)
+
+    plt.scatter(x, y, c=colors)
+    plt.xlim(0, 1)
+    plt.ylim(0, 1)
+    plt.show()
+
+
+def plot_pi_sampling(n: int):
+    golden = pi_golden_sample(n)
+    random = pi_random_sample(n)
+    n_points, cartesian = pi_cartesian_sample(n)
+    plt.plot(golden, label='golden sample')
+    plt.plot(random, label='random sample')
+    plt.plot(n_points, cartesian, label='cartesian sample')
+    plt.xscale('log')
+    plt.axhline(np.pi)
+    plt.legend()
+    plt.show()
+
+
+def plot_ball_sampling(n_sample: int):
+    fig, ax = plt.subplots(2, 2)
+
+    x, y = golden_ball_sampling(n_sample, 2).T
+    colors = np.linspace(0, 1, n_sample)
+    ax[0, 0].scatter(x, y, c=colors)
+    ax[0, 0].set_xlim([-1, 1])
+    ax[0, 0].set_ylim([-1, 1])
+
+    x, y = golden_ball_sampling(n_sample, 2, 2).T
+    colors = np.linspace(0, 1, n_sample)
+    ax[0, 1].scatter(x, y, c=colors)
+    ax[0, 1].set_xlim([-1, 1])
+    ax[0, 1].set_ylim([-1, 1])
+
+    x, y = golden_ball_sampling(n_sample, 2, 3).T
+    colors = np.linspace(0, 1, n_sample)
+    ax[1, 0].scatter(x, y, c=colors)
+    ax[1, 0].set_xlim([-1, 1])
+    ax[1, 0].set_ylim([-1, 1])
+
+    x, y = golden_ball_sampling(n_sample, 2, 4).T
+    colors = np.linspace(0, 1, n_sample)
+    ax[1, 1].scatter(x, y, c=colors)
+    ax[1, 1].set_xlim([-1, 1])
+    ax[1, 1].set_ylim([-1, 1])
+
+    plt.show()
+
+
+def plot_sphere_sampling(n_sample: int):
+    x, y, z = golden_sphere_sampling(n_sample, 2).T
+    colors = np.linspace(0, 1, n_sample)
+
+    fig = plt.figure()
+    ax = fig.add_subplot(projection='3d')
+
+    ax.scatter(x, y, z, c=colors)
+
+    ax.set_xlim([-1, 1])
+    ax.set_ylim([-1, 1])
+    ax.set_zlim([-1, 1])
+
+    plt.show()

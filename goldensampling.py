@@ -87,9 +87,6 @@ def spherical_to_cartesian(x):
     return y
 
 
-
-
-
 # PI SAMPLING FUNCTIONS
 
 def pi_sample_cumulative(points):
@@ -169,19 +166,19 @@ def plot_ball_sampling(n_sample: int):
     ax[0, 0].set_xlim([-1, 1])
     ax[0, 0].set_ylim([-1, 1])
 
-    x, y = golden_ball_sampling(n_sample, 2, 2).T
+    x, y = golden_ball_sampling(n_sample, 2, p=2).T
     colors = np.linspace(0, 1, n_sample)
     ax[0, 1].scatter(x, y, c=colors)
     ax[0, 1].set_xlim([-1, 1])
     ax[0, 1].set_ylim([-1, 1])
 
-    x, y = golden_ball_sampling(n_sample, 2, 3).T
+    x, y = golden_ball_sampling(n_sample, 2, p=3).T
     colors = np.linspace(0, 1, n_sample)
     ax[1, 0].scatter(x, y, c=colors)
     ax[1, 0].set_xlim([-1, 1])
     ax[1, 0].set_ylim([-1, 1])
 
-    x, y = golden_ball_sampling(n_sample, 2, 4).T
+    x, y = golden_ball_sampling(n_sample, 2, p=4).T
     colors = np.linspace(0, 1, n_sample)
     ax[1, 1].scatter(x, y, c=colors)
     ax[1, 1].set_xlim([-1, 1])

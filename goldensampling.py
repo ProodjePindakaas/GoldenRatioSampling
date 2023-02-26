@@ -24,9 +24,10 @@ def golden_sample(n_sample: int, n_dim: int, *, p: int = 1):
 
 def golden_sphere_sampling(n_sample: int, n_dim: int, *, p: int = 1, cartesian: bool = True):
     point_coordinates = golden_sample(n_sample, n_dim, p=p).T
+    radii = np.ones(n_sample)
     angles = np.arccos(2 * point_coordinates[:-1] - 1)
     last_angle = 2 * np.pi * point_coordinates[-1]
-    spherical_coordinates = np.array([np.ones(n_sample), *angles, last_angle])
+    spherical_coordinates = np.array([radii, *angles, last_angle])
     points = spherical_coordinates.T
     if cartesian:
         points = [spherical_to_cartesian(p) for p in points]
@@ -34,8 +35,20 @@ def golden_sphere_sampling(n_sample: int, n_dim: int, *, p: int = 1, cartesian: 
 
 
 def golden_ball_sampling(n_sample: int, n_dim: int, *, p: int = 1, cartesian: bool = True):
+    point_coordinates = golden_sample(n_sample, n_dim, p=p).T
+    radii = np.power(point_coordinates[0], 1 / n_dim)
+    angles = np.arccos(2 * point_coordinates[1:-1] - 1)
+    last_angle = 2 * np.pi * point_coordinates[-1]
+    spherical_coordinates = np.array([radii, *angles, last_angle])
+    points = spherical_coordinates.T
+    if cartesian:
+        points = [spherical_to_cartesian(p) for p in points]
+    return np.array(points)
+
+
+def golden_radial_sampling(n_sample: int, n_dim: int, *, p: int = 1, cartesian: bool = True, radial_spacing: float = 1.0):
     points = golden_sphere_sampling(n_sample, n_dim - 1, p=p, cartesian=False)
-    r = np.linspace(0, 1, n_sample)
+    r = np.arange(n_sample) * radial_spacing
     r = np.power(r, 1 / n_dim)
     points[:, 0] *= r
     if cartesian:

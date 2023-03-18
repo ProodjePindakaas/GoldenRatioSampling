@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sympy.solvers import nsolve
 from sympy import Symbol
+from typing import Callable
 
 
 # GOLDEN RATIO SAMPLING FUNCTIONS
@@ -63,9 +64,9 @@ def cartesian_product(*arrays):
     return np.dstack(meshgrid).reshape(-1, len(arrays))
 
 
-def cartesian_sample(n_sample: int, n_dim: int, *, endpoint: bool = False):
+def cartesian_sample(n_sample: int, n_dim: int):
     n_side = np.floor(np.power(n_sample, 1 / n_dim)).astype(int)
-    array = np.linspace(0, 1, n_side, endpoint=endpoint)
+    array = np.linspace(0, 1, n_side, endpoint=False) + 0.5 / n_side
     arrays = [array] * n_dim
     return cartesian_product(*arrays)
 
@@ -145,7 +146,51 @@ def pi_cartesian_sample(max_sample: int):
     return n_points, estimates
 
 
+# NUMERICAL INTEGRATION
+
+def golden_integral(func: Callable, n_dim: int, max_sample: int, *, p: int = 1):
+    points = golden_sample(max_sample, n_dim)
+    values = func(points)
+    sums = np.cumsum(values)
+    estimates = sums / np.arange(1.0, max_sample + 1.0)
+    return estimates
+
+
+def random_integral(func: Callable, n_dim: int, max_sample: int, *, p: int = 1):
+    points = np.random.rand(max_sample, n_dim)
+    values = func(points)
+    sums = np.cumsum(values)
+    estimates = sums / np.arange(1.0, max_sample + 1.0)
+    return estimates
+
+
+def cartesian_integral(func: Callable, n_dim: int, max_sample: int, *, p: int = 1):
+    n_points = np.zeros(max_sample)
+    estimates = np.zeros(max_sample)
+    for n in range(max_sample):
+        points = cartesian_sample(n + 1, n_dim)
+        n_points[n] = points.shape[0]
+        values = func(points)
+        sums = np.sum(values)
+        estimates[n] = sums / n_points[n]
+    return n_points, estimates
+
+
 # PLOTTING FUNCTIONS
+
+def plot_gaussian_integral(n_sample: int, *, n_dim: int = 1, p: int = 1):
+    def gaussian(x, sigma=1):
+        return np.exp(-np.sum((x/sigma)**2, axis=-1))
+    golden = golden_integral(gaussian, n_dim, n_sample)
+    random = random_integral(gaussian, n_dim, n_sample)
+    n_points, cartesian = cartesian_integral(gaussian, n_dim, n_sample)
+    plt.plot(golden, label='golden sample')
+    plt.plot(random, label='random sample')
+    plt.plot(n_points, cartesian, label='cartesian sample')
+    plt.xscale('log')
+    plt.legend()
+    plt.show()
+
 
 def plot_golden_sample(n_sample: int, *, p: int = 1):
     x, y = golden_sample(n_sample, 2, p=p).T

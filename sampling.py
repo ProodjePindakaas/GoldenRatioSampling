@@ -1,3 +1,4 @@
+from typing import List, Generator
 import numpy as np
 from sympy.solvers import nsolve
 from sympy import Symbol
@@ -5,7 +6,7 @@ from sympy import Symbol
 from cartesian import spherical_to_cartesian
 
 
-def golden_vector(n_dim: int, *, p: int = 1) -> list[float]:
+def golden_vector(n_dim: int, *, p: int = 1) -> List[float]:
     """ Returns N-dimensional golden vector.
 
     Generalisation of the ratio a n dimensional number or vector as defined
@@ -36,7 +37,7 @@ def golden_vector(n_dim: int, *, p: int = 1) -> list[float]:
     return vec
 
 
-def golden_sample(n_sample: int, n_dim: int, *, p: int = 1) -> list[list[float]]:
+def golden_sample(n_sample: int, n_dim: int, *, p: int = 1) -> Generator[List[float], None, None]:
     """Returns a sample generated from the N-dimensional golden mean.
 
     Sample of fixed length n_sample within the (Multidimensional)

@@ -60,7 +60,7 @@ def golden_sample(n_sample: int, n_dim: int, *, p: int = 1) -> Generator[List[fl
 def golden_sphere_sampling(n_sample: int,
                            n_dim: int, *,
                            p: int = 1,
-                           cartesian_output: bool = True) -> list[list[float]]:
+                           cartesian_output: bool = True) -> List[List[float]]:
     """ Returns golden sample on N-dimensional unit sphere.
 
     Golden sample on S^n_dim, surface of D^(n_dim+1)
@@ -80,7 +80,7 @@ def golden_sphere_sampling(n_sample: int,
 def golden_ball_sampling(n_sample: int,
                          n_dim: int, *,
                          p: int = 1,
-                         cartesian_output: bool = True) -> list[list[float]]:
+                         cartesian_output: bool = True) -> List[List[float]]:
     """Returns golden sampling in N-dimensional unit ball.
     Golden sample on the ball D^n_dim.
     """
@@ -100,7 +100,7 @@ def golden_radial_sampling(n_sample: int,
                            n_dim: int, *,
                            p: int = 1,
                            cartesian: bool = True,
-                           radial_spacing: float = 1.0) -> list[list[float]]:
+                           radial_spacing: float = 1.0) -> List[List[float]]:
     '''
 
     '''

@@ -2,12 +2,38 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sympy.solvers import nsolve
 from sympy import Symbol
-from typing import Callable
+from typing import Callable, List
+
+
+# TYPES
+
+Vector = List[float]
+# Sample = List[Vector]
 
 
 # GOLDEN RATIO SAMPLING FUNCTIONS
 
-def golden_vec(n_dim: int, *, p: int = 1):
+def golden_vector(n_dim: int, *, p: int = 1) -> Vector:
+    """ Returns N-dimensional golden vector.
+
+    Generalisation of the ratio a n dimensional number or vector as defined
+    by Anderson (1993) [1].
+
+    Arguments:
+        n_dim: interger
+            Dimension of golden vector. Example: n_dim = 1 (and p=1)
+            corresponds to golden ratio phi  =  0.618 .
+        p: integer (Default: 1)
+            Period of golden vector. p multiples of the golden vector fit
+            within the interval [0,1]^n_dim. Example: for n_dim = 1, the
+            golden vectors corresponding to p = 2, 3 are also known
+            as the silver, bronze, etc ratios.
+    Returns:
+        vec: Vector
+
+    [1] P.G. Anderson (1993), 'Multidimensional Golden Means'
+        in 'Application of Fibonacci numbers'.
+    """
     assert isinstance(n_dim, int) and n_dim > 0
     assert isinstance(p, int) and p > 0
     vec = np.zeros(n_dim)
@@ -18,36 +44,70 @@ def golden_vec(n_dim: int, *, p: int = 1):
     return vec
 
 
-def golden_sample(n_sample: int, n_dim: int, *, p: int = 1):
-    vec = golden_vec(n_dim, p=p)
+def golden_sample(n_sample: int, n_dim: int, *, p: int = 1) -> List[Vector]:
+    """Returns a sample generated from the N-dimensional golden mean.
+
+    Sample of fixed length n_sample within the (Multidimensional)
+    interval [0,1]^n_dim.
+
+    Arguments:
+        n_sample: integer
+            Sample size
+
+    Returns:
+        Sample: List[Vector]
+            Sample of n_sample integer multiple of the n_dim golden vector
+            restricted to the (Multidimensional) interval [0,1]^n_dim.
+    """
+    vec = golden_vector(n_dim, p=p)
     return np.array([n * vec % 1 for n in range(n_sample)])
 
 
-def golden_sphere_sampling(n_sample: int, n_dim: int, *, p: int = 1, cartesian: bool = True):
+def golden_sphere_sampling(n_sample: int,
+                           n_dim: int, *,
+                           p: int = 1,
+                           cartesian_output: bool = True) -> List[Vector]:
+    """ Returns golden sample on N-dimensional unit sphere.
+
+    Golden sample on S^n_dim, surface of D^(n_dim+1)
+    """
     point_coordinates = golden_sample(n_sample, n_dim, p=p).T
     radii = np.ones(n_sample)
     angles = np.arccos(2 * point_coordinates[:-1] - 1)
     last_angle = 2 * np.pi * point_coordinates[-1]
     spherical_coordinates = np.array([radii, *angles, last_angle])
     points = spherical_coordinates.T
-    if cartesian:
+    if cartesian_output:
         points = [spherical_to_cartesian(p) for p in points]
     return np.array(points)
 
 
-def golden_ball_sampling(n_sample: int, n_dim: int, *, p: int = 1, cartesian: bool = True):
+def golden_ball_sampling(n_sample: int,
+                         n_dim: int, *,
+                         p: int = 1,
+                         cartesian_output: bool = True) -> List[Vector]:
+    """Returns golden sampling in N-dimensional unit ball.
+    Golden sample on the ball D^n_dim.
+    """
     point_coordinates = golden_sample(n_sample, n_dim, p=p).T
     radii = np.power(point_coordinates[0], 1 / n_dim)
     angles = np.arccos(2 * point_coordinates[1:-1] - 1)
     last_angle = 2 * np.pi * point_coordinates[-1]
     spherical_coordinates = np.array([radii, *angles, last_angle])
     points = spherical_coordinates.T
-    if cartesian:
+    if cartesian_output:
         points = [spherical_to_cartesian(p) for p in points]
     return np.array(points)
 
 
-def golden_radial_sampling(n_sample: int, n_dim: int, *, p: int = 1, cartesian: bool = True, radial_spacing: float = 1.0):
+def golden_radial_sampling(n_sample: int,
+                           n_dim: int, *,
+                           p: int = 1,
+                           cartesian: bool = True,
+                           radial_spacing: float = 1.0) -> List[Vector]:
+    '''
+
+    '''
     points = golden_sphere_sampling(n_sample, n_dim - 1, p=p, cartesian=False)
     r = np.arange(n_sample) * radial_spacing
     r = np.power(r, 1 / n_dim)
@@ -148,7 +208,10 @@ def pi_cartesian_sample(max_sample: int):
 
 # NUMERICAL INTEGRATION
 
-def golden_integral(func: Callable, n_dim: int, max_sample: int, *, p: int = 1):
+def golden_integral(func: Callable,
+                    n_dim: int,
+                    max_sample: int, *,
+                    p: int = 1) -> Vector:
     points = golden_sample(max_sample, n_dim)
     values = func(points)
     sums = np.cumsum(values)
@@ -156,7 +219,10 @@ def golden_integral(func: Callable, n_dim: int, max_sample: int, *, p: int = 1):
     return estimates
 
 
-def random_integral(func: Callable, n_dim: int, max_sample: int, *, p: int = 1):
+def random_integral(func: Callable,
+                    n_dim: int,
+                    max_sample: int, *,
+                    p: int = 1) -> Vector:
     points = np.random.rand(max_sample, n_dim)
     values = func(points)
     sums = np.cumsum(values)
@@ -164,7 +230,10 @@ def random_integral(func: Callable, n_dim: int, max_sample: int, *, p: int = 1):
     return estimates
 
 
-def cartesian_integral(func: Callable, n_dim: int, max_sample: int, *, p: int = 1):
+def cartesian_integral(func: Callable,
+                       n_dim: int,
+                       max_sample: int, *,
+                       p: int = 1) -> (List[int], Vector):
     n_points = np.zeros(max_sample)
     estimates = np.zeros(max_sample)
     for n in range(max_sample):

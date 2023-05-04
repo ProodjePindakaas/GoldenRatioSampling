@@ -1,7 +1,7 @@
 import numpy as np
 from typing import Callable
 
-from sampling import golden_sample, cartesian_sample
+from goldensampling.sampling import golden_sample, cartesian_sample
 
 # NUMERICAL INTEGRATION
 

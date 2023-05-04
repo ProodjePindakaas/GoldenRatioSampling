@@ -1,9 +1,9 @@
 [build-system]
 requires = ["hatchling"]
-build-backend = "hatchling.build
+build-backend = "hatchling.build"
 
 [project]
-name = "golden-ratio-sampling"
+name = "goldensampling"
 version = "0.0.1"
 description = "Quasirandom sampling scheme based on multidimensional golden ratio's."
 readme = "README.md"
@@ -12,6 +12,11 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: GNU Lesser General Public License v2 or later (LGPLv2+)",
     "Operating System :: OS Independent",
+]
+
+dependencies = [
+    "numpy",
+    "sympy",
 ]
 
 [project.urls]

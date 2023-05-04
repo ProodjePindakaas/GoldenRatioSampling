@@ -3,7 +3,7 @@ import numpy as np
 from sympy.solvers import nsolve
 from sympy import Symbol
 
-from cartesian import spherical_to_cartesian
+from goldensampling.cartesian import spherical_to_cartesian
 
 
 def golden_vector(n_dim: int, *, p: int = 1) -> List[float]:
@@ -31,7 +31,7 @@ def golden_vector(n_dim: int, *, p: int = 1) -> List[float]:
     assert isinstance(p, int) and p > 0
     vec = np.zeros(n_dim)
     phi = Symbol('phi')
-    vec[0] = nsolve(phi * (phi + p) ** n_dim - 1, 1)
+    vec[0] = nsolve(phi * (phi + p) ** n_dim - 1, 0.1)
     for k in range(1, n_dim):
         vec[k] = vec[0] * (vec[0] + p) ** k
     return vec
